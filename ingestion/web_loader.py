@@ -19,7 +19,7 @@ class GithubDocLoader:
         title = title_tag.get_text(strip=True) if title_tag else ""
 
         return {
-            "content": content,
+            "html": main_content,     
             "source": url,
             "title": title,
             "doc_type": "web"
