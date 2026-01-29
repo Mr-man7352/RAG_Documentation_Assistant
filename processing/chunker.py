@@ -1,5 +1,5 @@
 from markdownify import markdownify
-from langchain.text_splitter import MarkdownHeaderTextSplitter
+from langchain_text_splitters import MarkdownHeaderTextSplitter
 
 class DocumentChunker:
     def __init__(self, min_chunk_size : int =300, max_chunk_size : int = 1500):
@@ -8,6 +8,7 @@ class DocumentChunker:
 
         self.markdown_splitter = MarkdownHeaderTextSplitter(
             headers_to_split_on=[
+                ('#','h1'),
                 ('##','h2'),
                 ('###','h3')
             ],
@@ -21,6 +22,8 @@ class DocumentChunker:
         """
         #Converting from HTML to Markdown
         markdown_content= markdownify(str(doc_data['html']))
+
+        print("Content before chunking: ",markdown_content[:1500])
 
         # Chunking the markdown data (Header-based)
         chunks= self.markdown_splitter.split_text(markdown_content)
