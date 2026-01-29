@@ -64,8 +64,8 @@ class RAGGenerator:
             combine_docs_chain= qa_chain
         )
 
-        def ask(self, question):
+    def ask(self, question):
 
-            result= self.rag_chain.invoke({'input':question})
+        result= self.rag_chain.invoke({'input':question})
 
-            return result
+        return result
