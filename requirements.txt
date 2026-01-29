@@ -4,3 +4,7 @@ lxml
 langchain
 markdownify
 langchain-text-splitters
+langchain-community
+langchain-qdrant
+sentence-transformers
+qdrant-client
