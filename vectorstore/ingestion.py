@@ -36,6 +36,13 @@ class IngestionPipeline:
         chunker= DocumentChunker()
         chunks= chunker.chunk_document(docs, api_name)
 
+        print(f"Length of chunks: {len(chunks)}")
+
+        for i, chunk in enumerate(chunks):
+            print(f"-----------Printing Chunk{i}--------")
+            print(f"Chunk Length: {len(chunk.page_content)}")
+
+
         #Embedding and Indexing
 
         if self.vector_store is None:

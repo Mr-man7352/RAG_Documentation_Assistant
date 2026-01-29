@@ -1,4 +1,6 @@
 from RAG.vectorstore.ingestion import IngestionPipeline
+from qdrant_client.models import Filter, FieldCondition, MatchValue
+
 
 def run_retriever():
 
@@ -11,8 +13,21 @@ def run_retriever():
         api_name='github'
     )
 
+
+    code_filter = Filter(
+        must=[
+            FieldCondition(
+                key="contains_code",
+                match=MatchValue(value=True)
+            )
+        ]
+    )
+
     retriever= pipeline.vector_store.as_retriever(
-        search_kwargs={'k':5}
+        search_kwargs={
+                        'k':12, 
+                      }
+
     )
 
     query='How do I create an issue using the GitHub REST API?'
@@ -21,12 +36,26 @@ def run_retriever():
 
     result= retriever.invoke(query)
 
-    print(f"Retrieved {len(result)} Documents!")
+    final_result= re_rank_results(result)
 
-    for i, doc in enumerate(result, start=1):
+    print(f"Retrieved {len(final_result)} Documents!")
+
+    for i, doc in enumerate(final_result, start=1):
         print(f'----Results {i}------')
         print(f'Chunk Length: {len(doc.page_content)}')
         print(doc.page_content[:300])
+        print(doc.metadata)
+
+def re_rank_results(docs):
+
+    keywords=['create','post','add']
+
+    def score(docs):
+        text = docs.page_content.lower()
+
+        return sum(kw in text for kw in keywords) 
+
+    return sorted(docs, key=score, reverse=True)       
 
 
 if __name__=='__main__':
