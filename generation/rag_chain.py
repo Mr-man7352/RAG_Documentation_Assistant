@@ -1,8 +1,8 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, pipeline
 from langchain_community.llms import HuggingFacePipeline
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 
 class RAGGenerator:
 
@@ -13,13 +13,13 @@ class RAGGenerator:
 
     def __init__(self, vector_store):
 
-        model_name='google/flan-t5-base'
+        model_name='google/flan-t5-small'
 
         tokenizer= AutoTokenizer.from_pretrained(model_name)
-        model=AutoModelForCausalLM.from_pretrained(model_name)
+        model= AutoModelForSeq2SeqLM.from_pretrained(model_name)
 
         hf_pipeline= pipeline(
-            'text2text-generation',
+            'text-generation',
             model=model,
             tokenizer=tokenizer,
             max_new_tokens=512
@@ -31,41 +31,58 @@ class RAGGenerator:
             search_kwargs={ 'k' : 6}
         )
 
-        self.build_chain()
+        self.rag_chain = self.build_chain()
+
+    def format_docs(self, docs):
+
+        "Merges all the retrieved docs into a single document"
+
+        return "\n\n".join(doc.page_content for doc in docs)    
 
     def build_chain(self):
 
-        system_prompt = """You are an expert GitHub REST API assistant.
+        prompt= ChatPromptTemplate.from_template(
+            """
+            You are an expert API documentation assistant.
 
-        Answer ONLY using the provided documentation context.
+            Answer ONLY using the provided documentation context.
 
-        Rules:
-        - If answer not found → say "Not found in documentation"
-        - Prefer endpoint + method names
-        - Include code examples if present
-        - Be precise and technical
+            Context:
+            {context}
 
-        Documentation Context:
-        {context}
-        """    
+            Question:
+            {question}
 
-        prompt= ChatPromptTemplate([
-            ('system',system_prompt),
-            ('user',{input})
-        ])
+            Rules:
+            - Be precise
+            - Include endpoint names when possible
+            - Include code snippets if present
+            - If answer not found — say so clearly
 
-        qa_chain= create_stuff_documents_chain(
-            llm=self.llm,
-            prompt=prompt
+            """
         )
 
-        self.rag_chain= create_retrieval_chain(
-            retriever= self.retriever,
-            combine_docs_chain= qa_chain
+        rag_chain=(
+
+            {
+                "context" : self.retriever | self.format_docs,
+                "question" : RunnablePassthrough()
+            }
+
+            | prompt
+            | self.llm
+            | StrOutputParser()
         )
 
-    def ask(self, question):
+        return rag_chain
+    
+    def generate(self,question):
+        return self.rag_chain.invoke(question)
 
-        result= self.rag_chain.invoke({'input':question})
 
-        return result
+
+
+
+
+
+

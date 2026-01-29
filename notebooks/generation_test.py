@@ -12,8 +12,17 @@ def run_generation():
         api_name='github'
     )
 
-    generator= RAGGenerator(pipeline.vector_store)
+    generator= RAGGenerator(vector_store= pipeline.vector_store)
 
     question = 'How do I create an issue using GitHub REST API?'
 
-    result= generator.ask(question)
+    print(f"---QUESTION----{question}")
+
+    answer= generator.generate(question)
+
+    print(f"-----ANSWER-------{answer}")
+
+
+
+if __name__ == "__main__":
+    run_generation()

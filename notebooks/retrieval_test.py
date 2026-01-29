@@ -14,15 +14,6 @@ def run_retriever():
     )
 
 
-    code_filter = Filter(
-        must=[
-            FieldCondition(
-                key="contains_code",
-                match=MatchValue(value=True)
-            )
-        ]
-    )
-
     retriever= pipeline.vector_store.as_retriever(
         search_kwargs={
                         'k':12, 
