@@ -3,7 +3,7 @@ from RAG.processing.chunker import DocumentChunker
 
 loader= GithubDocLoader()
 
-doc= loader.load('https://docs.github.com/en/rest/authentication')
+doc= loader.load('https://docs.github.com/en/rest/issues/issues')
 
 chunker= DocumentChunker(min_chunk_size=300)
 chunks= chunker.chunk_document(doc, api_name="github")
