@@ -13,15 +13,10 @@ class IngestionPipeline:
             model_name='all-MiniLM-L6-v2'
         )
 
-        #Initializaing Qdrant Client (in-memory)
-        self.client = QdrantClient(":memory:")
+        self.collection_name= collection_name
 
         #Creating Vector Store
-        self.vector_store= QdrantVectorStore(
-            client=self.client,
-            collection_name=collection_name,
-            embedding=self.embeddings
-        )
+        self.vector_store=None
 
         print('Pipeline Ready!')
 
@@ -42,7 +37,16 @@ class IngestionPipeline:
         chunks= chunker.chunk_document(docs, api_name)
 
         #Embedding and Indexing
-        self.vector_store.add_documents(chunks)
+
+        if self.vector_store is None:
+            self.vector_store= QdrantVectorStore.from_documents(
+                documents=chunks,
+                collection_name=self.collection_name,
+                embedding=self.embeddings,
+                location=":memory:"
+            )
+        else:
+            self.vector_store.add_documents(chunks)
 
         print(f"Indexed {len(chunks)} chunks!")
 
