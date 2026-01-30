@@ -124,11 +124,17 @@ This improves retrieval filtering and answer grounding.
 
 Model: sentence-transformers/all-MiniLM-L6-v2
 
+---
+
 # Vector Store 
 
 Vector DB : Qdrant (local in-memory mode)
 
+---
+
 # Generation Layer - Groq API
+
+---
 
 # Evaluation Implemented
 
@@ -149,7 +155,9 @@ Hit@8 = 100%
 
 Average Retrieval latency = 3.2 seconds
 
-## Future Improvements
+---
+
+# Future Improvements
 
 - Multi-source ingestion
 - Hybrid retrieval (BM25 + dense)
