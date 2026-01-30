@@ -1,8 +1,9 @@
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, pipeline
-from langchain_community.llms import HuggingFacePipeline
+
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
+from langchain_groq import ChatGroq
+import os
 
 class RAGGenerator:
 
@@ -11,24 +12,22 @@ class RAGGenerator:
     
     """
 
-    def __init__(self, vector_store):
+    def __init__(self, vector_store, groq_api_key=None):
 
-        model_name='google/flan-t5-small'
+        
 
-        tokenizer= AutoTokenizer.from_pretrained(model_name)
-        model= AutoModelForSeq2SeqLM.from_pretrained(model_name)
-
-        hf_pipeline= pipeline(
-            'text-generation',
-            model=model,
-            tokenizer=tokenizer,
-            max_new_tokens=512
+        self.llm= ChatGroq(
+            api_key=groq_api_key or os.getenv('GROQ_API_KEY'),
+            model_name='llama-3.3-70b-versatile',
+            temperature=0.1,
+            max_tokens=1500
         )
 
-        self.llm= HuggingFacePipeline(pipeline=hf_pipeline)
-
         self.retriever= vector_store.as_retriever(
-            search_kwargs={ 'k' : 6}
+            search_type="mmr",
+            search_kwargs={ 'k' : 12,
+                           'fetch_k':20,
+                           'lambda_mult' : 0.7}
         )
 
         self.rag_chain = self.build_chain()
@@ -38,29 +37,38 @@ class RAGGenerator:
         "Merges all the retrieved docs into a single document"
 
         return "\n\n".join(doc.page_content for doc in docs)    
+        
 
     def build_chain(self):
 
         prompt= ChatPromptTemplate.from_template(
-            """
-            You are an expert API documentation assistant.
+           
+            """You are an expert API documentation assistant specializing in GitHub's REST API.
 
-            Answer ONLY using the provided documentation context.
+            Use the following documentation context to answer the user's question accurately and helpfully.
 
-            Context:
+            Documentation Context:
             {context}
 
-            Question:
-            {question}
+            Question: {question}
 
-            Rules:
-            - Be precise
-            - Include endpoint names when possible
-            - Include code snippets if present
-            - If answer not found — say so clearly
+            Instructions:
+            - Answer based ONLY on the provided documentation above
+            - Be specific and include exact endpoint paths, HTTP methods, and parameter names
+            - Include code examples from the documentation when available
+            - If the documentation shows request/response examples, include them
+            - Format your response clearly with proper structure
+            - If you cannot find the answer in the documentation, say so explicitly
+            - For API endpoints, always mention:
+            * HTTP method (GET, POST, etc.)
+            * Endpoint path
+            * Required parameters
+            * Authentication requirements (if mentioned)
 
-            """
+            Answer:"""
+
         )
+        
 
         rag_chain=(
 

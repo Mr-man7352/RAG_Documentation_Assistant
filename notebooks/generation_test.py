@@ -1,5 +1,6 @@
 from RAG.vectorstore.ingestion import IngestionPipeline
 from RAG.generation.rag_chain import RAGGenerator
+import os
 
 def run_generation():
 
@@ -12,7 +13,10 @@ def run_generation():
         api_name='github'
     )
 
-    generator= RAGGenerator(vector_store= pipeline.vector_store)
+    generator= RAGGenerator(
+                        vector_store= pipeline.vector_store,
+                        groq_api_key=os.getenv("GROQ_API_KEY")
+                        )
 
     question = 'How do I create an issue using GitHub REST API?'
 
