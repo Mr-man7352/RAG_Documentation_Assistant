@@ -1,6 +1,6 @@
 from RAG.vectorstore.ingestion import IngestionPipeline
 from RAG.generation.rag_chain import RAGGenerator
-from RAG.notebooks.llm_judge_eval import groundedness_score, relevance_score
+from RAG.notebooks.llm_judge_eval import groundedness_score, relevance_score, completeness_score
 import os
 
 
@@ -40,6 +40,8 @@ grounded_scores = []
 
 relevance_scores = []
 
+complete_scores = []
+
 for q in questions:
 
     print("Question: ",q)
@@ -56,12 +58,17 @@ for q in questions:
 
     rs = relevance_score(q, answer)
 
+    cs= completeness_score(q, answer)
+
     grounded_scores.append(gs)
 
     relevance_scores.append(rs)
+    
+    complete_scores.append(cs)
      
     print("Groundedness: ", gs)
     print("Relevance: ", rs) 
+    print("Completeness : ", cs) 
 
 
 
@@ -69,6 +76,7 @@ print("\n==============================")
 print("FINAL SCORES")
 print("Avg Groundedness:", sum(grounded_scores)/len(grounded_scores))
 print("Avg Relevance:", sum(relevance_scores)/len(relevance_scores))
+print("Avg Completeness:", sum(complete_scores)/len(complete_scores))
 
 
 
