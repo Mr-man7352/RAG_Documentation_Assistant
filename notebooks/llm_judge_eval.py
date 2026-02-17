@@ -12,7 +12,7 @@ judge_llm= ChatGroq(
 
 def groundedness_score(question, context, answer):
 
-    prompt= """
+    prompt= f"""
         You are aevaluating a RAG system.
 
         Question:{question}
@@ -40,7 +40,7 @@ def groundedness_score(question, context, answer):
 
 def relevance_score(question, answer):
 
-    prompt= """
+    prompt= f"""
 
     Question : {question}
 

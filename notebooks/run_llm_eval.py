@@ -1,6 +1,6 @@
-from vectorstore.ingestion import IngestionPipeline
-from generation.rag_chain import RAGGenerator
-from llm_judge_eval import groundedness_score, relevance_score
+from RAG.vectorstore.ingestion import IngestionPipeline
+from RAG.generation.rag_chain import RAGGenerator
+from RAG.notebooks.llm_judge_eval import groundedness_score, relevance_score
 import os
 
 
