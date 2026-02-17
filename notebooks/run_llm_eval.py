@@ -50,7 +50,7 @@ for q in questions:
 
     docs = retriever.invoke(q)
 
-    context = "\n".join([d.page_content for d in docs])
+    context = "\n".join([d.page_content for d in docs[:4]])
 
     answer = generator.generate(q)
 
