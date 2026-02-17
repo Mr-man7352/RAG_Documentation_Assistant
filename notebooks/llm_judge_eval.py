@@ -30,7 +30,7 @@ def groundedness_score(question, context, answer):
 
     response= judge_llm.invoke(prompt).content.strip().lower()
 
-    if "YES" in response:
+    if "yes" in response:
         return 1
     else:
         return 0
