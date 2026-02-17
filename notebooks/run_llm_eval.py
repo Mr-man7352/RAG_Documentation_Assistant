@@ -1,6 +1,6 @@
 from RAG.vectorstore.ingestion import IngestionPipeline
 from RAG.generation.rag_chain import RAGGenerator
-from RAG.notebooks.llm_judge_eval import groundedness_score, relevance_score, completeness_score
+from RAG.notebooks.llm_judge_eval import groundedness_score, relevance_score, completeness_score, hallucination_score
 import os
 
 
@@ -42,6 +42,8 @@ relevance_scores = []
 
 complete_scores = []
 
+hallucination_scores = []
+
 for q in questions:
 
     print("Question: ",q)
@@ -60,15 +62,20 @@ for q in questions:
 
     cs= completeness_score(q, answer)
 
+    hs= hallucination_score(q, answer)
+
     grounded_scores.append(gs)
 
     relevance_scores.append(rs)
     
     complete_scores.append(cs)
+
+    hallucination_scores.append(hs)
      
     print("Groundedness: ", gs)
     print("Relevance: ", rs) 
     print("Completeness : ", cs) 
+    print("Hallucination Rate : ", hs) 
 
 
 
@@ -77,6 +84,7 @@ print("FINAL SCORES")
 print("Avg Groundedness:", sum(grounded_scores)/len(grounded_scores))
 print("Avg Relevance:", sum(relevance_scores)/len(relevance_scores))
 print("Avg Completeness:", sum(complete_scores)/len(complete_scores))
+print("Avg Hallucination:", sum(hallucination_scores)/len(hallucination_scores))
 
 
 
