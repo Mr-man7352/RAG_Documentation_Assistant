@@ -78,3 +78,24 @@ def completeness_score(question, answer):
         return 0
 
 
+def hallucination_score(context, answer):
+
+    prompt = f"""
+You are evaluating a RAG system.
+
+Context:
+{context}
+
+Answer:
+{answer}
+
+Does the answer contain any information that is NOT present in the context?
+Reply ONLY with YES or NO.
+"""
+
+    response = judge_llm.invoke(prompt).content.strip().lower()
+
+    if "yes" in response:
+        return 1   # hallucination present
+    else:
+        return 0   # no hallucination
