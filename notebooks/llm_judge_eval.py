@@ -57,3 +57,24 @@ def relevance_score(question, answer):
     return int(response)
 
 
+def completeness_score(question, answer):
+
+    prompt = f"""
+
+    Question: {question}
+
+    Answer : {answer}
+
+    Does this answer fully and completely address the question?
+    Only answer as yes or no.
+
+    """
+
+    llm_response= judge_llm.invoke(prompt).content.lower()
+
+    if "yes" in llm_response:
+        return 1
+    else:
+        return 0
+
+
