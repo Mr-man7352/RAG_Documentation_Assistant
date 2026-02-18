@@ -33,7 +33,7 @@ questions = [
     "How do I create an issue using GitHub REST API?",
     "How do I update an issue?",
     "How do I lock an issue?",
-    "How do I get an issue?"
+#    "How do I get an issue?"
 ]
 
 grounded_scores = []
@@ -50,11 +50,11 @@ for q in questions:
 
     docs = retriever.invoke(q)
 
-    context = "\n".join([d.page_content for d in docs[:4]])
+    context = "\n".join([d.page_content for d in docs])
 
     answer = generator.generate(q)
 
-    print("Answer: ", answer[:300])
+    print("Answer: ", answer[:500])
 
     gs = groundedness_score(q, context, answer)
 

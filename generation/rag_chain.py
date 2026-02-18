@@ -18,7 +18,8 @@ class RAGGenerator:
 
         self.llm= ChatGroq(
             api_key=groq_api_key or os.getenv('GROQ_API_KEY'),
-            model_name='llama-3.3-70b-versatile',
+            #model_name='llama-3.3-70b-versatile',
+            model_name='llama-3.3-8b-versatile',
             temperature=0.1,
             max_tokens=1500
         )

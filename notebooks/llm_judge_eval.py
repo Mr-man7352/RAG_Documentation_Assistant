@@ -4,9 +4,9 @@ from langchain_groq import ChatGroq
 
 judge_llm= ChatGroq(
     api_key= os.getenv("GROQ_API_KEY"),
-    model_name="llama-3.3-70b-versatile",
+    model_name="llama-3.1-8b-instant",
     temperature=0,
-    max_tokens=200
+    max_tokens=20
 )
 
 
@@ -89,7 +89,16 @@ Context:
 Answer:
 {answer}
 
-Does the answer contain any information that is NOT present in the context?
+Check if the answer includes factual claims that are NOT supported by the context.
+
+Ignore:
+- rephrasing
+- formatting
+- summarization
+- minor wording differences
+
+Only mark hallucination if the answer introduces NEW factual information not present in context.
+
 Reply ONLY with YES or NO.
 """
 
