@@ -33,7 +33,7 @@ questions = [
     "How do I create an issue using GitHub REST API?",
     "How do I update an issue?",
     "How do I lock an issue?",
-#    "How do I get an issue?"
+    "How do I get an issue?"
 ]
 
 grounded_scores = []
