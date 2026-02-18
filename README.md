@@ -12,6 +12,7 @@ This project demonstrates an end-to-end RAG pipeline including:
 - Answer generation
 - Retrieval quality evaluation
 - Latency benchmarking
+- LLM-as-a-judge evaluation framework
 
 Designed to reflect **industry RAG architecture patterns** rather than tutorial-level prototypes.
 
@@ -38,6 +39,9 @@ Retriever
 LLM Generator
     ↓
 Answer + Sources
+    ↓
+Evaluation Layer
+
 
 ```
 
@@ -68,7 +72,9 @@ RAG/
 │ ├── retrieval_test.py
 │ ├── generation_test.py
 │ ├── retrieval_eval_test.py
-│ └── latency_test.py
+│ ├── latency_test.py
+│ ├── llm_judge_eval.py        
+│ └── run_llm_eval.py          
 │
 ├── requirements.txt
 └── README.md
@@ -138,11 +144,11 @@ Vector DB : Qdrant (local in-memory mode)
 
 # Evaluation Implemented
 
-This project includes measurable RAG evaluation — rarely done in beginner projects.
+This project includes measurable RAG evaluation.
 
 ---
 
-## Retrieval Metric — Hit@K
+## Retrieval Metric - Hit@K
 
 Measures whether correct doc appears in top-K retrieved chunks.
 
@@ -155,14 +161,43 @@ Hit@8 = 100%
 
 Average Retrieval latency = 3.2 seconds
 
+## Groundedness Score - 
+
+Checks if answer is fully supported by retrieved context.
+
+Returns:
+
+1 = grounded
+0 = not grounded
+
+## Answer Relevance - 
+
+Measures how well answer addresses user question.
+
+Scale: 1-5
+
+## Answer Completeness - 
+
+Checks whether answer fully addresses question.
+
+Returns:
+
+1 = complete
+0 = incomplete
+
+## Hallucination Detection with Multi-Pass Evaluation - 
+
+Detects whether answer introduces information not present in retrieved context.
+
+Instead of single-pass judgement, uses multi-run ( 3 runs) evaluation to calculate avg hallucination score computed and hence reduces LLM noise.
+
+
 ---
 
 # Future Improvements
 
 - Multi-source ingestion
 - Hybrid retrieval (BM25 + dense)
-- Hallucination detection
-- Evaluation dashboards
 - UI interface
 
 
