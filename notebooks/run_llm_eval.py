@@ -62,7 +62,7 @@ for q in questions:
 
     cs= completeness_score(q, answer)
 
-    hs= hallucination_score(q, answer)
+    hs= hallucination_score(q, answer, runs=3)
 
     grounded_scores.append(gs)
 
@@ -75,7 +75,7 @@ for q in questions:
     print("Groundedness: ", gs)
     print("Relevance: ", rs) 
     print("Completeness : ", cs) 
-    print("Hallucination Rate : ", hs) 
+    print("Hallucination Rate : ", round(hs,2)) 
 
 
 
@@ -84,7 +84,7 @@ print("FINAL SCORES")
 print("Avg Groundedness:", sum(grounded_scores)/len(grounded_scores))
 print("Avg Relevance:", sum(relevance_scores)/len(relevance_scores))
 print("Avg Completeness:", sum(complete_scores)/len(complete_scores))
-print("Avg Hallucination:", sum(hallucination_scores)/len(hallucination_scores))
+print("Avg Hallucination:", round(sum(hallucination_scores)/len(hallucination_scores),3))
 
 
 
