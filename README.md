@@ -1,6 +1,6 @@
 # 📚 Documentation Assistant for GitHub API Docs
 
-A **(RAG)** system that answers questions about GitHub REST API documentation using semantic search with MMR retriever + LLM generation.
+A **RAG** system that answers questions about GitHub REST API documentation using semantic search with MMR retriever + LLM generation.
 
 This project demonstrates an end-to-end RAG pipeline including:
 
