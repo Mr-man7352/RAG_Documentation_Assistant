@@ -114,12 +114,12 @@ Instead of naive fixed-size chunking, this system uses:
 
 ## Metadata Added Per Chunk
 
-api_name
-source_url
-page_title
-doc_type
-contains_code
-header_section
+- api_name
+- source_url
+- page_title
+- doc_type
+- contains_code
+- header_section
 
 
 This improves retrieval filtering and answer grounding.
