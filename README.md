@@ -114,11 +114,7 @@ Instead of naive fixed-size chunking, this system uses:
 
 ## Metadata Added Per Chunk
 
-- To improve retrieval filtering and answer grounding, below parameters were added to the metadata- 
-
-api_name, source_url, page_title, doc_type, contains_code, header_section
-
-
+- To improve retrieval filtering and answer grounding, following parameters were added to the metadata - api_name, source_url, page_title, doc_type, contains_code, header_section
 
 ---
 
