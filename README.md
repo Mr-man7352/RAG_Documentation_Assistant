@@ -1,196 +1,195 @@
-# 📚 Documentation Assistant for GitHub API Docs
+# Documentation Assistant for GitHub REST API Docs
 
-A **RAG** system that answers questions about GitHub REST API documentation using semantic search with MMR retriever + LLM generation.
+This repository is a small retrieval-augmented generation pipeline built around one GitHub REST API documentation page:
 
-This project demonstrates an end-to-end RAG pipeline including:
+- Source page: https://docs.github.com/en/rest/issues/issues
+- Retrieval backend: local in-memory Qdrant
+- Embeddings: sentence-transformers/all-MiniLM-L6-v2
+- Generation model: Groq-hosted llama-3.1-8b-instant
 
-- Web ingestion
-- Semantic chunking
-- Embeddings
-- Vector database indexing
-- Retriever design
-- Answer generation
-- Retrieval quality evaluation
-- Latency benchmarking
-- LLM-as-a-judge evaluation framework
+The codebase covers ingestion, markdown-aware chunking, vector indexing, retrieval, answer generation, and a few script-based evaluation helpers.
 
-Designed to reflect **industry RAG architecture patterns** rather than tutorial-level prototypes.
+## What The Code Actually Does
 
----
+The current pipeline is:
 
-# System Architecture
-
+```text
+GitHub Docs page
+  -> fetch HTML with requests
+  -> extract <main id="main-content">
+  -> convert extracted HTML to markdown
+  -> split by markdown headers
+  -> enforce chunk size limits
+  -> embed chunks with MiniLM
+  -> index into Qdrant (:memory:)
+  -> retrieve relevant chunks
+  -> generate an answer with Groq
 ```
 
-Web Docs
-    ↓
-HTML Loader
-    ↓
-Markdown Conversion
-    ↓
-Semantic Chunker
-    ↓
-Embeddings (Sentence Transformers)
-    ↓
-Qdrant Vector Store
-    ↓
-Retriever
-    ↓
-LLM Generator
-    ↓
-Answer + Sources
-    ↓
-Evaluation Layer
+Important scope notes:
 
+- The implementation currently ingests a single documentation URL, not a multi-source corpus.
+- Qdrant is used in in-memory mode only, so indexed data is not persisted across runs.
+- The generator returns a text answer only. It does not return structured source citations.
+- The scripts in notebooks/ are regular Python scripts, not Jupyter notebooks.
 
-```
+## Project Structure
 
----
-
-# Project Structure
-
-```
-
-RAG/
-│
-├── ingestion/
-│ └── web_loader.py
-│
-├── processing/
-│ └── chunker.py
-│
-├── vectorstore/
-│ └── ingestion.py
-│
+```text
+.
 ├── generation/
-│ └── rag_chain.py
-│
+│   └── rag_chain.py
+├── ingestion/
+│   ├── __init__.py
+│   └── web_loader.py
 ├── notebooks/
-│ ├── ingestion_test.py
-│ ├── ingestion_pipeline_test.py
-│ ├── chunking_test.py
-│ ├── retrieval_test.py
-│ ├── generation_test.py
-│ ├── retrieval_eval_test.py
-│ ├── latency_test.py
-│ ├── llm_judge_eval.py        
-│ └── run_llm_eval.py          
-│
+│   ├── chunking_test.py
+│   ├── generation_test.py
+│   ├── ingestion_pipeline_test.py
+│   ├── ingestion_test.py
+│   ├── latency_test.py
+│   ├── llm_judge_eval.py
+│   ├── retrieval_eval.py
+│   ├── retrieval_test.py
+│   └── run_llm_eval.py
+├── processing/
+│   └── chunker.py
+├── vectorstore/
+│   ├── __init__.py
+│   └── ingestion.py
 ├── requirements.txt
 └── README.md
-
 ```
 
+## Components
 
-Each layer is independently testable — mirrors production RAG service layering.
+### Ingestion
 
----
+ingestion/web_loader.py:
 
-# Data Source
+- Fetches a documentation URL with requests.
+- Parses HTML with BeautifulSoup.
+- Extracts only the page's main content from main-content.
+- Returns the extracted HTML fragment plus source metadata.
 
-Current ingestion source: https://docs.github.com/en/rest/issues/issues
+### Chunking
 
+processing/chunker.py:
 
-Easily extensible to multiple documentation sources.
+- Converts the extracted HTML fragment to markdown with markdownify.
+- Splits on markdown headers #, ##, and ###.
+- Uses RecursiveCharacterTextSplitter for oversized sections.
+- Merges adjacent chunks smaller than the configured minimum size.
 
----
+Default chunking parameters:
 
-# Chunking Strategy (Industry Style)
+- Minimum chunk size: 400 characters
+- Target chunk size: 1200 characters
+- Maximum chunk size: 2000 characters
+- Recursive overlap: 100 characters
 
-Instead of naive fixed-size chunking, this system uses:
+Chunk metadata currently includes:
 
-## Header-Aware Chunking
+- api_name
+- source_url
+- page_title
+- doc_type
+- contains_code
 
-- Split on H1, H2 and H3 markdown headers
-- Preserves semantic topic boundaries
-- Aligns with user query intent
+The code does not explicitly add a header_section metadata field.
 
-## Size Enforcement
+### Vector Store
 
-- Target chunk size: ~1200 chars
-- Max chunk size: 2000 chars
-- Oversized chunks → recursively split
-- Small chunks → merged intelligently
+vectorstore/ingestion.py:
 
-## Metadata Added Per Chunk
+- Uses HuggingFaceEmbeddings with all-MiniLM-L6-v2.
+- Creates a QdrantVectorStore from the generated chunks.
+- Stores vectors in Qdrant using location=:memory:.
+- Reuses the same vector store instance within a run if more chunks are added.
 
-- To improve retrieval filtering and answer grounding, following parameters were added to the metadata - api_name, source_url, page_title, doc_type, contains_code, header_section
+### Retrieval And Generation
 
----
+generation/rag_chain.py:
 
-# Embeddings
+- Builds a retriever from the vector store with MMR search.
+- Uses k=12, fetch_k=20, and lambda_mult=0.7.
+- Sends retrieved context and the user question to ChatGroq.
+- Returns the model response as plain text.
 
-Model: sentence-transformers/all-MiniLM-L6-v2
+The prompt instructs the model to stay grounded in the retrieved documentation and include endpoint details when available.
 
----
+## Evaluation Helpers
 
-# Vector Store 
+The repository includes small evaluation scripts rather than a packaged benchmark framework.
 
-Vector DB : Qdrant (local in-memory mode)
+notebooks/retrieval_eval.py:
 
----
+- Evaluates Hit@K over four hard-coded questions.
+- Treats retrieval as a hit when an expected keyword appears in the retrieved chunk text.
 
-# Generation Layer - Groq API
+notebooks/latency_test.py:
 
----
+- Measures end-to-end generation latency across four hard-coded questions.
+- Prints per-question latencies and an average.
 
-# Evaluation Implemented
+notebooks/llm_judge_eval.py:
 
-This project includes measurable RAG evaluation.
+- Defines LLM-based scoring helpers for groundedness, relevance, completeness, and hallucination rate.
+- Uses Groq for evaluation, including a 3-run average for hallucination scoring.
 
----
+notebooks/run_llm_eval.py:
 
-## Retrieval Metric - Hit@K
+- Runs the generation pipeline over four questions.
+- Aggregates average judge scores.
 
-Measures whether correct doc appears in top-K retrieved chunks.
+These scripts do not guarantee any fixed metrics. Reported values depend on the current model behavior, retrieval results, network conditions, and the source page content at runtime.
 
-Example result:
+## Setup
 
-Hit@5 = 75%
-Hit@8 = 100%
+Install the listed dependencies:
 
-## Latency Measurement -
+```bash
+pip install -r requirements.txt
+```
 
-Average Retrieval latency = 3.2 seconds
+Generation and LLM-based evaluation also require Groq support and an API key. The code imports langchain_groq, so install it if it is not already available in your environment:
 
-## Groundedness Score - 
+```bash
+pip install langchain-groq
+export GROQ_API_KEY="your_api_key_here"
+```
 
-Checks if answer is fully supported by retrieved context.
+## Running The Scripts
 
-Returns:
+The scripts currently import modules using the RAG.* namespace. Make sure your environment/package layout supports that import path before running them.
 
-1 = grounded
-0 = not grounded
+Examples:
 
-## Answer Relevance - 
+```bash
+python notebooks/ingestion_pipeline_test.py
+python notebooks/retrieval_test.py
+python notebooks/generation_test.py
+python notebooks/retrieval_eval.py
+python notebooks/latency_test.py
+python notebooks/run_llm_eval.py
+```
 
-Measures how well answer addresses user question.
+## Current Limitations
 
-Scale: 1-5
+- Single source URL only
+- No persistent vector database storage
+- No user interface
+- No packaged CLI or application entrypoint
+- Evaluation sets are small and manually defined
+- Several scripts are experiment-style and assume a specific import layout
 
-## Answer Completeness - 
+## Possible Next Improvements
 
-Checks whether answer fully addresses question.
-
-Returns:
-
-1 = complete
-0 = incomplete
-
-## Hallucination Detection with Multi-Pass Evaluation - 
-
-Detects whether answer introduces information not present in retrieved context.
-
-Instead of single-pass judgement, uses multi-run ( 3 runs) evaluation to calculate avg hallucination score computed and hence reduces LLM noise.
-
-
----
-
-# Future Improvements
-
-- Multi-source ingestion
-- Hybrid retrieval (BM25 + dense)
-- UI interface
+- Support multiple documentation sources
+- Add persistent Qdrant storage
+- Add hybrid retrieval or reranking
+- Package the project so scripts run cleanly without import-path setup
+- Add source citation formatting in generation output
 
 
 
